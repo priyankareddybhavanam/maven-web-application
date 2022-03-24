@@ -1,0 +1,30 @@
+node{
+    def mavenHome = tool name : "3.8.5"
+    // push or get the source code
+    stage('checkout stage')
+    {
+        git branch: 'development', credentialsId: '6c372e2c-4582-4596-b88c-7028958f68d6', url: 'https://github.com/priyankareddybhavanam/maven-web-application.git'
+}
+    //build stage
+    stage('buildstage')
+    {
+        sh "$mavenHome/bin/mvn clean package"
+    }
+    //generate sonarqube report
+    stage('sonarqube report')
+    {
+        sh "$mavenHome/bin/mvn sonar:sonar"
+    }
+    //upload artifact to nexus
+    stage('upload artifact to nexus')
+    {
+        sh "$mavenHome/bin/mvn deploy"
+    }
+    //deploy to tomcat
+    stage('deploy to tomcat')
+    {
+        sshagent(['f1715cf4-c60e-4272-a412-8e10a7d21a8b']) {
+    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.234.31.131:/opt/apache-tomcat-9.0.59/webapps"
+    }
+}
+}
