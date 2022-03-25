@@ -1,4 +1,6 @@
 node{
+     buildName 'dev - ${BUILD_NUMBER}'
+     buildDescription 'scriptedway'
     def mavenHome = tool name : "3.8.5"
     // push or get the source code
     stage('checkout stage')
