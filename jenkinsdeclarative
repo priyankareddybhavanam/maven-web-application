@@ -1,0 +1,59 @@
+pipeline{
+    agent any
+    tools{
+        maven "3.8.5"
+    }
+    options {
+  buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')
+  timestamps()
+}
+triggers {
+  pollSCM '* * * * *'
+  cron '* * * * *'
+}
+post {
+  always {
+    // One or more steps need to be included within each condition's block.
+  }
+  success {
+    // One or more steps need to be included within each condition's block.
+  }
+  failure {
+    // One or more steps need to be included within each condition's block.
+  }
+}
+  stages{
+    //get the code from scm
+    stage('get the code from scm'){
+        steps{
+            git branch: 'development', credentialsId: '6c372e2c-4582-4596-b88c-7028958f68d6', url: 'https://github.com/priyankareddybhavanam/maven-web-application.git'
+        }
+    }
+   //do the build
+   stage('do the build'){
+       steps{
+           sh "mvn clean package"
+       }
+   }
+   //generate sonar report
+   stage('generate sonar report'){
+       steps{
+           sh "mvn sonar:sonar"
+       }
+   }
+   //upload to nexus repo
+   stage('deploy to nexus'){
+   steps{
+       sh "mvn deploy"
+   }
+   }
+   //uploaad to tomcat
+   stage('deploy to tomcat'){
+       steps{
+           sshagent(['f1715cf4-c60e-4272-a412-8e10a7d21a8b']){
+       sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@52.66.234.240:/opt/apache-tomcat-9.0.59/webapps"
+   }
+       }
+       }
+    }
+}
